@@ -1,0 +1,38 @@
+name: Update
+
+on:
+  push:
+  schedule:
+    - cron: 0 0 * * *
+
+jobs:
+  Update:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: GetTime
+      id: date
+      run: echo "::set-output name=date::$(date +'%Y-%m-%d %H:%M:%S CST')"
+
+    - name: Delete workflow runs
+      uses: Mattraks/delete-workflow-runs@v2
+      with:
+        retain_days: 0
+        keep_minimum_runs: 5 
+
+    - name: Update
+      run: |
+        rm -f tv/m3u/IPTV.m3u && wget https://raw.githubusercontent.com/fanmingming/live/main/tv/m3u/ipv6.m3u -O tv/m3u/IPTV.m3u
+      
+    - name: Commit
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add -A
+        git commit -am "${{ steps.date.outputs.date }}"
+
+    - name: Push
+      run: git push -f origin main      
+      
